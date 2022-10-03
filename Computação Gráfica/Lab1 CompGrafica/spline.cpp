@@ -3,29 +3,58 @@
 #include <stdlib.h>
 #include <GL/glut.h>
 #include <stdio.h>
+#include <math.h>
 #define TAMANHO_JANELA 500
+#define DISTANCE_DRAG_POINT 0.6
 
 float size = 5.0;
 
 int isDragging=0;
+int pointDragged=-1;
 
 //Pontos de controle da Spline
+int numPoints = 4;
 GLfloat ctrlpoints[4][3] = {
         { -4.0, -4.0, 0.0}, { -2.0, 4.0, 0.0}, 
         {2.0, -4.0, 0.0}, {4.0, 4.0, 0.0}};
+
+///////////////Funções auxiliares
+int isCloseToPoint(float* point1, float* point2, float minDist){
+   float distance = sqrtf(pow(point1[0]-point2[0], 2.0) + pow(point1[1]-point2[1], 2.0));
+   //printf("Distância pro ponto: %f\n", distance);
+
+   if(distance <= minDist){
+      return 1;
+   } 
+   return 0;
+}
+
+
+
+///////////////Callbacks
 
 
 void mouse(int button, int state, int x, int y){
    y = TAMANHO_JANELA - y;
    //Convert X and Y from 0-TAMANHO_JANELA to -5.0 to 5.0
    float X = x/50.0 - 5.0;
-   float Y = y/50.0 - 5.0; //N sei se está certo
+   float Y = y/50.0 - 5.0; 
+   float click_point[2] = {X, Y};
    
    if(state==0){
       printf("Mouse: X %f, Y %f, State %d\n", X, Y, state);
-      //Check if click is near a point
+      //Check if click is near a point (0,3 de diferença)
+      int point = 0;
+      for (point =0; point<numPoints; point++){
+         if(isCloseToPoint(ctrlpoints[point] , click_point, DISTANCE_DRAG_POINT)){
+            printf("Início drag ponto %d\n", point);
+            isDragging = 1;
+            pointDragged = point;
+         }
+      }
    } else {
       isDragging = 0;
+      printf("Fim drag ponto %d\n", pointDragged);
    }
    
    glutPostRedisplay();
@@ -33,8 +62,17 @@ void mouse(int button, int state, int x, int y){
 
 void mouseMotion(int x, int y){
    y = TAMANHO_JANELA - y;
+   float X = x/50.0 - 5.0;
+   float Y = y/50.0 - 5.0; 
 
+   //Move with dragging with mouse
+   if(isDragging){
+      //Change point position to mouse position
+      ctrlpoints[pointDragged][0] = X;
+      ctrlpoints[pointDragged][1] = Y;
+   }
    
+   glMap1f(GL_MAP1_VERTEX_3, 0.0, 1.0, 3, 4, &ctrlpoints[0][0]); 
    glutPostRedisplay();
 }
 
@@ -116,6 +154,7 @@ int main(int argc, char** argv)
    glutDisplayFunc(display);
    glutReshapeFunc(reshape);
    glutMouseFunc(mouse);
+   glutMotionFunc(mouseMotion);
    glutMainLoop();
    return 0;
 }
