@@ -2,6 +2,7 @@
 #include <GL/glu.h>
 #include <GL/glut.h>
 #include <stdio.h>
+#include <math.h>
 #define TAMANHO_JANELA 500
 
 //Pontos do triangulo
@@ -23,6 +24,12 @@ float pCliqueX = 0, pCliqueY = 0;
 //Pronto do clique projetado
 float pProjX = 0, pProjY = 0;
 
+
+//Calculo
+GLfloat m1=0;
+GLfloat b1=0;
+GLfloat m2=0;
+GLfloat b2=0;
         
 void display(void)
 {
@@ -56,7 +63,7 @@ void display(void)
    glBegin(GL_POINTS);
         glVertex3f(pProjX, pProjY, 0.0);
    glEnd();
-   
+
    /* Desenhar no frame buffer! */
    glutSwapBuffers(); //Funcao apropriada para janela double buffer
 }
@@ -72,6 +79,53 @@ void init (void)
   glOrtho(0.0, 1.0, 0.0, 1.0, -1.0, 1.0);
 }
 
+GLfloat getDistance(GLfloat x1, GLfloat y1, GLfloat x2, GLfloat y2){
+    return sqrt(pow(y2-y1, 2.0) + pow(x2-x1, 2.0));
+}
+
+void updateBGcolor(){
+    printf("R: %f / G: %f / B: %f\n", gR, gG, gB);
+
+    //Encontra a projeção entre o ponto azul (pBx,pBy) e o ponto do clique, na reta entre o ponto vermelho e verde
+    
+    
+    //Se a reta entre vermelho e verde for vertical
+    if(pRx == pGx){
+        pProjX = pGx;
+        //Calcula a equação da reta entre azul e clique (y = m1.x + b1)
+        m1 = (pCliqueY - pBy)/(pCliqueX - pBx);    
+        b1 = -m1*pCliqueX + pCliqueY;
+
+        //Encontra o ponto de projeção
+        pProjY = m1*pProjX + b1;
+    } else {
+        //Calcula a equação da reta entre vermelho e verde (y = m2.x + b2)
+        m2 = (pRy - pGy)/(pRx - pGx);
+        b2 = -m2*pRx + pRy;
+        
+        if(pCliqueX - pBx == 0.0){
+            pProjX = pCliqueX;
+            pProjY = m2*pProjX + b2;
+        }  else {
+            //Calcula a equação da reta entre azul e clique (y = m1.x + b1)
+            m1 = (pCliqueY - pBy)/(pCliqueX - pBx);    
+            b1 = -m1*pCliqueX + pCliqueY;
+
+            //Encontra o ponto de projeção
+            pProjX = (b2-b1)/(m1-m2);
+            pProjY = m1*pProjX + b1;
+        }    
+    }    
+    
+
+
+    //Componente azul
+    gB = (1.0 - getDistance(pCliqueX, pCliqueY, pBx, pBy) / getDistance(pProjX, pProjY, pBx, pBy));
+    gR = (1.0 - getDistance(pProjX, pProjY, pRx, pRy) / getDistance(pGx, pGy, pRx, pRy)) * (1.0-gB);
+    gG = (1.0 - getDistance(pProjX, pProjY, pGx, pGy) / getDistance(pGx, pGy, pRx, pRy)) * (1.0-gB);
+
+}
+
 void motion(int x, int y){
     //Corrige a posicao do mouse para a posicao da janela de visualizacao
     y = TAMANHO_JANELA - y;
@@ -83,10 +137,7 @@ void motion(int x, int y){
         pCliqueX = fX;
         pCliqueY = fY;
 
-		/**
-			COLOQUE SEU CODIGO AQUI
-		**/
-
+        
     } else if (draggingPointR){
         pRx = (GLfloat)x/TAMANHO_JANELA;
         pRy = (GLfloat)y/TAMANHO_JANELA;
@@ -97,6 +148,8 @@ void motion(int x, int y){
         pBx = (GLfloat)x/TAMANHO_JANELA;
         pBy = (GLfloat)y/TAMANHO_JANELA;
     }
+
+    updateBGcolor();
     
     glutPostRedisplay();
 }

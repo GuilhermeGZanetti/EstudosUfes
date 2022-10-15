@@ -1,0 +1,3 @@
+Open C++ include path
+
+add: /usr/include/**
