@@ -19,5 +19,5 @@ void Tiro::Move()
 
 bool Tiro::Valido()
 {
-
+    
 }

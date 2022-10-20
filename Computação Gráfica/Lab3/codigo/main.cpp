@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include "robo.h"
 #include "alvo.h"
+#include "my_transforms.h"
 #define INC_KEY 1
 #define INC_KEYIDLE 1.0
 

@@ -1,4 +1,5 @@
 #include "robo.h"
+#include "my_transforms.h"
 #include <math.h>
 #include <stdio.h>
 
@@ -78,6 +79,11 @@ void Robo::DesenhaRobo(GLfloat x, GLfloat y, GLfloat thetaWheel, GLfloat theta1,
     DesenhaRoda(-baseWidth/2.0, 0.0, thetaWheel, 1, 1, 1);
 
     glPopMatrix();
+
+
+
+    float gXInit, gYInit, gDirectionAng;
+    encontraPosicaoInicialTiro(gTheta1, gTheta2, gTheta3, &gXInit, &gYInit, &gDirectionAng);
 }
 
 void Robo::RodaBraco1(GLfloat inc)
@@ -107,12 +113,40 @@ void Robo::MoveEmX(GLfloat dx)
     gThetaWheel += dgraus;
 }
 
-//Funcao auxiliar de rotacao
-void RotatePoint(GLfloat x, GLfloat y, GLfloat angle, GLfloat &xOut, GLfloat &yOut){
+//Funcao auxiliar para encontrar a posição do ponto de tiro e a direção
+void encontraPosicaoInicialTiro(float theta1, float theta2, float theta3, float *gXInit, float *gYInit, float *gDirectionAng){
+    /////TESTE //////////
+    float X=0, Y=0, Z=0;
+    float X2=0, Y2=0, Z2=0;
 
+    mSetIdentity();
+    mTranslate(0.0, -200, 0.0);
+    mTranslate(0.0, baseHeight, 0.0);
+    mRotate(0,0,theta1);
+    mTranslate(0.0, paddleHeight, 0);
+    mRotate(0,0,theta2);
+    mTranslate(0.0, paddleHeight, 0);
+    mApplyToPoint(&X, &Y, &Z);
+
+    glPointSize(6);
+    glColor3f (1, 0, 0);
+    glBegin(GL_POINTS);
+        glVertex3f(X, Y, Z);    
+    glEnd();
+
+    mRotate(0,0,theta3);
+    mTranslate(0.0, paddleHeight, 0);
+    mApplyToPoint(&X2, &Y2, &Z2);
+
+    glPointSize(6);
+    glColor3f (1, 1, 1);
+    glBegin(GL_POINTS);
+        glVertex3f(X2, Y2, Z2);
+    glEnd();
 }
 
 Tiro* Robo::Atira()
 {
-
+    float gXInit, gYInit, gDirectionAng;
+    encontraPosicaoInicialTiro(gTheta1, gTheta2, gTheta3, &gXInit, &gYInit, &gDirectionAng);
 }
