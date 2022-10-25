@@ -10,7 +10,7 @@
 #define baseWidth 100
 #define radiusWheel 30
 
-void encontraPosicaoInicialTiro(float theta1, float theta2, float theta3, float *gXInit, float *gYInit, float *gDirectionAng);
+void encontraPosicaoInicialTiro(float xRobo, float theta1, float theta2, float theta3, float *gXInit, float *gYInit, float *gDirectionAng);
 
 class Robo {
     GLfloat gX; 

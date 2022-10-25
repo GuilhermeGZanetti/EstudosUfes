@@ -28,7 +28,6 @@ void Robo::DesenhaCirc(GLint radius, GLfloat R, GLfloat G, GLfloat B)
             glVertex3f(xponto, yponto, 0.0);
         }            
     glEnd();
-
 }
 
 void Robo::DesenhaRoda(GLfloat x, GLfloat y, GLfloat thetaWheel, GLfloat R, GLfloat G, GLfloat B)
@@ -79,11 +78,6 @@ void Robo::DesenhaRobo(GLfloat x, GLfloat y, GLfloat thetaWheel, GLfloat theta1,
     DesenhaRoda(-baseWidth/2.0, 0.0, thetaWheel, 1, 1, 1);
 
     glPopMatrix();
-
-
-
-    float gXInit, gYInit, gDirectionAng;
-    encontraPosicaoInicialTiro(gTheta1, gTheta2, gTheta3, &gXInit, &gYInit, &gDirectionAng);
 }
 
 void Robo::RodaBraco1(GLfloat inc)
@@ -114,13 +108,13 @@ void Robo::MoveEmX(GLfloat dx)
 }
 
 //Funcao auxiliar para encontrar a posição do ponto de tiro e a direção
-void encontraPosicaoInicialTiro(float theta1, float theta2, float theta3, float *gXInit, float *gYInit, float *gDirectionAng){
-    /////TESTE //////////
+void encontraPosicaoInicialTiro(float xRobo, float theta1, float theta2, float theta3, float *gXInit, float *gYInit, float *gDirectionAng){
+    ///// TESTE //////////
     float X=0, Y=0, Z=0;
     float X2=0, Y2=0, Z2=0;
 
     mSetIdentity();
-    mTranslate(0.0, -200, 0.0);
+    mTranslate(xRobo, -200, 0.0);
     mTranslate(0.0, baseHeight, 0.0);
     mRotate(0,0,theta1);
     mTranslate(0.0, paddleHeight, 0);
@@ -128,25 +122,43 @@ void encontraPosicaoInicialTiro(float theta1, float theta2, float theta3, float 
     mTranslate(0.0, paddleHeight, 0);
     mApplyToPoint(&X, &Y, &Z);
 
+    /*
     glPointSize(6);
     glColor3f (1, 0, 0);
     glBegin(GL_POINTS);
         glVertex3f(X, Y, Z);    
-    glEnd();
+    glEnd();*/
 
     mRotate(0,0,theta3);
     mTranslate(0.0, paddleHeight, 0);
     mApplyToPoint(&X2, &Y2, &Z2);
 
+    /*
     glPointSize(6);
     glColor3f (1, 1, 1);
     glBegin(GL_POINTS);
         glVertex3f(X2, Y2, Z2);
-    glEnd();
+    glEnd();*/
+
+    *gXInit = X2;
+    *gYInit = Y2;
+    float dx = X2-X;
+    float dy = Y2-Y;
+    *gDirectionAng = (atan(dy/dx) * 180/M_PI);
+    if(*gDirectionAng <0){
+        *gDirectionAng += 180;
+    } else if(*gDirectionAng == 0.0){
+        if(dx < 0){
+            *gDirectionAng = 180;
+        }
+    }
 }
 
 Tiro* Robo::Atira()
 {
     float gXInit, gYInit, gDirectionAng;
-    encontraPosicaoInicialTiro(gTheta1, gTheta2, gTheta3, &gXInit, &gYInit, &gDirectionAng);
+    encontraPosicaoInicialTiro(gX, gTheta1, gTheta2, gTheta3, &gXInit, &gYInit, &gDirectionAng);
+
+    Tiro *tiro = new Tiro(gXInit, gYInit, gDirectionAng);
+    return tiro;    
 }
