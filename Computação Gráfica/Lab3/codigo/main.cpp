@@ -8,7 +8,7 @@
 #include "alvo.h"
 #include "my_transforms.h"
 #define INC_KEY 1
-#define INC_KEYIDLE 1.0
+#define INC_KEYIDLE 0.2
 
 //Key status
 int keyStatus[256];
@@ -126,7 +126,16 @@ void init(void)
 
 void idle(void)
 {
-    double inc = INC_KEYIDLE;
+    static GLdouble previousTime = glutGet(GLUT_ELAPSED_TIME);
+    GLdouble currentTime, timeDiference;
+    //Pega o tempo que passou do inicio da aplicacao
+    currentTime = glutGet(GLUT_ELAPSED_TIME);
+    // Calcula o tempo decorrido desde de a ultima frame.
+    timeDiference = currentTime - previousTime;
+    //Atualiza o tempo do ultimo frame ocorrido
+    previousTime = currentTime;
+
+    double inc = timeDiference*INC_KEYIDLE;
     //Treat keyPress
     if(keyStatus[(int)('a')])
     {
@@ -140,7 +149,7 @@ void idle(void)
     //Trata o tiro (soh permite um tiro por vez)
     //Poderia usar uma lista para tratar varios tiros
     if(tiro){
-        tiro->Move();
+        tiro->Move(timeDiference);
 
         //Trata colisao
         if (alvo.Atingido(tiro)){
@@ -163,7 +172,7 @@ void idle(void)
         else if (robo.ObtemX() < -(ViewingWidth/2)){
             dir *= -1;
         }
-        robo.MoveEmX(dir*INC_KEYIDLE);
+        robo.MoveEmX(timeDiference*dir*INC_KEYIDLE);
     }
     
     glutPostRedisplay();

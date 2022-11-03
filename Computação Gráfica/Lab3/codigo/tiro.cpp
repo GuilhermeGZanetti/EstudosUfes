@@ -31,14 +31,12 @@ void Tiro::DesenhaTiro(GLfloat x, GLfloat y)
 
 }
 
-void Tiro::Move()
-{
+void Tiro::Move(GLdouble timeDiference){
     float x=0.0, y=0.0, z;
-    printf("gX: %f gY: %f Theta: %f\n", gX, gY, gDirectionAng);
     mSetIdentity();
     mTranslate(gX, gY, 0);
     mRotate(0.0, 0.0, gDirectionAng-90);
-    mTranslate(0.0, gVel, 0.0);
+    mTranslate(0.0, timeDiference*gVel, 0.0);
     mApplyToPoint(&x, &y, &z);
     gX = x;
     gY = y;
@@ -46,5 +44,9 @@ void Tiro::Move()
 
 bool Tiro::Valido()
 {
-    return true;
+    GLfloat dist = sqrt(pow(gX-gXInit, 2.0) + pow(gY-gYInit, 2.0));
+    if(dist > DISTANCIA_MAX){
+        return false;
+    }
+    return true;    
 }

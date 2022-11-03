@@ -4,7 +4,7 @@
 #include <GL/glu.h>
 
 #define radiusTiro 5
-#define velocidadeTiro 5
+#define velocidadeTiro 0.8
 
 class Tiro {
     GLfloat gXInit; 
@@ -28,7 +28,7 @@ public:
     void Desenha(){ 
         DesenhaTiro(gX, gY);
     };
-    void Move();
+    void Move(GLdouble timeDiference);
     bool Valido();
     void GetPos(GLfloat &xOut, GLfloat &yOut){
         xOut = gX;
