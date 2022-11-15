@@ -1,5 +1,5 @@
-#ifndef AUX_H
-#define AUX_H
+#ifndef AUX_FUNCTIONS_H
+#define AUX_FUNCTIONS_H
 
 #include <math.h>
 
@@ -9,4 +9,4 @@ float getAngleVector(float x, float y);
 
 
 
-#endif //AUX_H
+#endif //AUX_FUNCTIONS_H
