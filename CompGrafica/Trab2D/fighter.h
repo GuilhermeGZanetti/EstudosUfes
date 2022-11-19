@@ -12,6 +12,7 @@
 #define GLOVE_RADIUS 0.5 //Proportion from body radius
 #define SHOULDER_BASE_ANGLE -125
 #define ELBOW_BASE_ANGLE 130
+#define COLLISION_CIRCLE_RADIUS 3
 
 //Colors
 #define ARM_COLOR_R 0
@@ -59,7 +60,7 @@ private:
     GLfloat getShoulderAngle(GLfloat punchStatus);
     GLfloat getElbowAngle(GLfloat punchStatus);
     void RotateFighter(GLfloat rotationDegrees);
-    void MoveFighter(GLfloat increment);
+    void MoveFighter(GLfloat increment, GLfloat ViewingWidth, GLfloat ViewingHeight, Fighter* opponent);
 
 public:
     Fighter(GLfloat x, GLfloat y, GLfloat radius, GLfloat angle, GLfloat R, GLfloat G, GLfloat B){
@@ -79,15 +80,20 @@ public:
     void Gira(GLfloat timeDiference){ 
         RotateFighter(timeDiference*INC_ROTATE);
     };
-    void Move(GLfloat timeDiference){ 
-        MoveFighter(timeDiference*INC_MOVE);
+    void Move(GLfloat timeDiference, GLfloat ViewingWidth, GLfloat ViewingHeight, Fighter* opponent){ 
+        MoveFighter(timeDiference*INC_MOVE, ViewingWidth, ViewingHeight, opponent);
     };
+
+    void DrawColisionCircle();
 
     GLfloat ObtemX(){
         return gX;
     };
     GLfloat ObtemY(){
         return gY;
+    };
+    GLfloat ObtemRaio(){
+        return gRadiusBody;
     };
 };
 

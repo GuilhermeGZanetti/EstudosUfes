@@ -1,5 +1,6 @@
 #include "fighter.h"
 #include "my_transforms.h"
+#include "auxFunctions.h"
 #include <math.h>
 #include <stdio.h>
 
@@ -101,7 +102,7 @@ void Fighter::RotateFighter(GLfloat rotationDegrees){
     gAngleDirection += rotationDegrees;
 }
 
-void Fighter::MoveFighter(GLfloat increment){
+void Fighter::MoveFighter(GLfloat increment, GLfloat ViewingWidth, GLfloat ViewingHeight, Fighter* opponent){
     mSetIdentity();
 
     mTranslate(gX, gY, 0);
@@ -111,7 +112,63 @@ void Fighter::MoveFighter(GLfloat increment){
     float X=0, Y=0, Z=0;
     mApplyToPoint(&X, &Y, &Z);
     //printf("Antes: gX: %f gY: %f Increment: %f\n", gX, gY, increment);
+
+    //Check collision with opponent
+    float minDist = (opponent->ObtemRaio() + gRadiusBody*COLLISION_CIRCLE_RADIUS);
+    if(getDistancePoints(X, Y, opponent->ObtemX(), opponent->ObtemY()) < minDist){
+        //Get unitary vector pointing from opponent to my new (wrong) position
+        float dx = X - opponent->ObtemX();
+        float dy = Y - opponent->ObtemY();
+        double dxUnitary = dx/getModuleVector(dx, dy);
+        double dyUnitary = dy/getModuleVector(dx, dy);
+
+        //Multiply it by the min Dist and get the resulting X and Y
+        X = dxUnitary*minDist + opponent->ObtemX();
+        Y = dyUnitary*minDist + opponent->ObtemY();
+    }
+
+    //Check collision with border
+    if(X - gRadiusBody <= 0){ //Se passar da borda na esquerda
+        X = gRadiusBody;
+    }
+    if(X + gRadiusBody >= ViewingWidth){ //Se passar da borda na direita
+        X = ViewingWidth - gRadiusBody;
+    }
+    if(Y - gRadiusBody <= 0){ //Se passar da borda embaixo
+        Y = gRadiusBody;
+    }
+    if(Y + gRadiusBody >= ViewingHeight){ //Se passar da borda embaixo
+        Y = ViewingHeight - gRadiusBody;
+    }
+
+    
+
+
     gX = X;
     gY = Y;
     //printf("Depois: gX: %f gY: %f\n", gX, gY);
+}
+
+
+void Fighter::DrawColisionCircle(){
+    glPushMatrix();
+
+    // Go to body center
+    glTranslatef(gX, gY, 0);
+
+    glPointSize(4);
+    glColor3f (0, 0, 0);
+
+    GLfloat radius = gRadiusBody*COLLISION_CIRCLE_RADIUS;
+    glBegin(GL_POINTS);
+        float angulo;
+        for(angulo=0; angulo<360; angulo+=8){
+            float xponto = radius*cos(angulo * (M_PI / 180.0));
+            float yponto = radius*sin(angulo * (M_PI / 180.0));
+            glVertex3f(xponto, yponto, 0.0);
+        }     
+    glEnd();
+
+
+    glPopMatrix();
 }

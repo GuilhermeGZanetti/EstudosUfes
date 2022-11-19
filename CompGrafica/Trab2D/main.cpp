@@ -14,11 +14,11 @@
 
 //Key status
 int keyStatus[256];
+int showColisionCircle = 0;
 
 // Window dimensions
 GLint Width;
 GLint Height;
-
 // Viewing dimensions
 GLint ViewingWidth;
 GLint ViewingHeight;
@@ -102,9 +102,13 @@ void renderScene(void)
 
     //Draw player
     player->Desenha();
-
     //Draw enemy
     enemy->Desenha();
+
+    if(showColisionCircle){
+        player->DrawColisionCircle();
+        enemy->DrawColisionCircle();
+    }
 
 
     glutSwapBuffers(); // Desenha the new frame of the game.
@@ -130,8 +134,10 @@ void keyPress(unsigned char key, int x, int y)
         case 'S':
              keyStatus[(int)('s')] = 1; //Using keyStatus trick
              break;
-        case ' ':
-             //Soca
+        case 'c':
+        case 'C':
+             //Mostra círculo de colisão
+             showColisionCircle = !showColisionCircle;
              break;
         case 27 :
              exit(0);
@@ -159,14 +165,14 @@ void init(void)
     // The color the windows will redraw. Its done to erase the previous frame.
     glClearColor(0.78f, 0.78f, 0.78f, 1.0f); // Black, no opacity(alpha).
  
-    glMatrixMode(GL_PROJECTION); // Select the projection matrix    
-    glOrtho(0,     // X coordinate of left edge             
-            (ViewingWidth),     // X coordinate of right edge            
-            0,     // Y coordinate of bottom edge             
-            (ViewingHeight),     // Y coordinate of top edge             
-            -100,     // Z coordinate of the “near” plane            
+    glMatrixMode(GL_PROJECTION); // Select the projection matrix 
+    glOrtho(0,     // X coordinate of left edge            
+            (ViewingWidth),     // X coordinate of right edge           
+            0,     // Y coordinate of bottom edge      
+            (ViewingHeight),     // Y coordinate of top edge            
+            -100,     // Z coordinate of the “near” plane           
             100);    // Z coordinate of the “far” plane
-    glMatrixMode(GL_MODELVIEW); // Select the projection matrix    
+    glMatrixMode(GL_MODELVIEW); // Select the projection matrix  
     glLoadIdentity();
       
 }
@@ -193,11 +199,11 @@ void idle(void)
     }
     if(keyStatus[(int)('w')])
     {
-        player->Move(timeDiference);
+        player->Move(timeDiference, ViewingWidth, ViewingHeight, enemy);
     }
     if(keyStatus[(int)('s')])
     {
-        player->Move(-timeDiference);
+        player->Move(-timeDiference, ViewingWidth, ViewingHeight, enemy);
     }
 
     
