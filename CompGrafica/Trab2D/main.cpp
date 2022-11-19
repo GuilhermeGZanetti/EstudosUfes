@@ -6,7 +6,7 @@
 #include <stdio.h>
 #include <string>
 #include "my_transforms.h"
-#include "aux.h"
+#include "auxFunctions.h"
 #include "tinyxml.h"
 #include "fighter.h"
 #define INC_KEY 1
@@ -41,7 +41,7 @@ void getInitialPosition(const char *filename){
             int rectY = std::stoi(rectArena->Attribute("y"));
             int rectwidth = std::stoi(rectArena->Attribute("width"));
             int rectheight = std::stoi(rectArena->Attribute("height"));
-            printf("Rect:\nx:%d y:%d width:%d height:%d\n", rectX, rectY, rectwidth, rectheight);
+            //printf("Rect:\nx:%d y:%d width:%d height:%d\n", rectX, rectY, rectwidth, rectheight);
 
             //Get first circle
             TiXmlElement *circle1 = root->FirstChildElement("circle");
@@ -49,7 +49,7 @@ void getInitialPosition(const char *filename){
             int c1Y = rectheight - (std::stoi(circle1->Attribute("cy")) - rectY);
             int c1R = std::stoi(circle1->Attribute("r"));
             const char *c1fill = circle1->Attribute("fill");
-            printf("Circle 1:\nx:%d y:%d radius:%d fill:%s\n", c1X, c1Y, c1R, c1fill);
+            //printf("Circle 1:\nx:%d y:%d radius:%d fill:%s\n", c1X, c1Y, c1R, c1fill);
 
             //Get second circle
             TiXmlElement *circle2 = circle1->NextSiblingElement("circle");
@@ -57,7 +57,7 @@ void getInitialPosition(const char *filename){
             int c2Y = rectheight - (std::stoi(circle2->Attribute("cy")) - rectY);
             int c2R = std::stoi(circle2->Attribute("r"));
             const char *c2fill = circle2->Attribute("fill");
-            printf("Circle 2:\nx:%d y:%d radius:%d fill:%s\n", c2X, c2Y, c2R, c2fill);
+            //printf("Circle 2:\nx:%d y:%d radius:%d fill:%s\n", c2X, c2Y, c2R, c2fill);
 
             //Define as dimensões da tela e do viewport
             Width = rectwidth;
@@ -76,12 +76,12 @@ void getInitialPosition(const char *filename){
 
             if(strcmp(c1fill, "green") == 0){ //Se o prímeiro circulo for o jogador
                 //Cria o jogador e o inimigo
-                player = new Fighter(c1X, c1Y, c1R, angle1, 0, 1, 0);
-                enemy = new Fighter(c2X, c2Y, c2R, angle2, 1, 0, 0);
+                player = new Fighter(c1X, c1Y, c1R, angle1, 0.2, 0.64, 0);
+                enemy = new Fighter(c2X, c2Y, c2R, angle2, 0.86, 0.39, 0.015);
             } else { //Se o segundo círculo for o jogador
                 //Cria o jogador e o inimigo
-                enemy = new Fighter(c1X, c1Y, c1R, angle1, 1, 0, 0);
-                player = new Fighter(c2X, c2Y, c2R, angle2, 0, 1, 0);
+                enemy = new Fighter(c1X, c1Y, c1R, angle1, 0.86, 0.39, 0.015);
+                player = new Fighter(c2X, c2Y, c2R, angle2, 0.2, 0.64, 0);
             }
         } else {
             printf("ERRO na leitura do SVG!\n");
@@ -149,7 +149,7 @@ void init(void)
 {
     ResetKeyStatus();
     // The color the windows will redraw. Its done to erase the previous frame.
-    glClearColor(0.0f, 0.0f, 0.0f, 1.0f); // Black, no opacity(alpha).
+    glClearColor(0.78f, 0.78f, 0.78f, 1.0f); // Black, no opacity(alpha).
  
     glMatrixMode(GL_PROJECTION); // Select the projection matrix    
     glOrtho(0,     // X coordinate of left edge             
