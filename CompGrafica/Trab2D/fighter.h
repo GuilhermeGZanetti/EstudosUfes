@@ -85,6 +85,7 @@ public:
         MoveFighter(timeDiference*INC_MOVE, ViewingWidth, ViewingHeight, opponent);
     };
     void RecolheSoco(GLfloat timeDiference);
+    int EstaAtingindoOponente(Fighter *opponent);
 
     void DrawColisionCircle();
 
@@ -97,6 +98,9 @@ public:
     GLfloat ObtemRaio(){
         return gRadiusBody;
     };
+
+    void MudaCor(GLfloat R, GLfloat G, GLfloat B){ gR = R; gG = G; gB=B; };
+
 
     void DefineRightPunchStatus(GLfloat status){
         if(status > 1) status = 1;

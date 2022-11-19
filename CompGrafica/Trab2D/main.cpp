@@ -19,6 +19,7 @@ int showColisionCircle = 0;
 //Punch control
 int isDragging = 0;
 GLfloat initialX = 0;
+int playerIsPunchingForward = 0;
 
 // Window dimensions
 GLint Width;
@@ -27,10 +28,22 @@ GLint Height;
 GLint ViewingWidth;
 GLint ViewingHeight;
 
+//Score
+int playerScore = 0;
+int enemyScore = 0;
+#define FONT_SIZE 0.1
+
 
 //Componentes do mundo virtual sendo modelado
+#define COLOR_HIT 0.5
 Fighter *player;
+#define PLAYER_INIT_R 0.2
+#define PLAYER_INIT_G 0.64
+#define PLAYER_INIT_B 0
 Fighter *enemy;
+#define ENEMY_INIT_R 0.86
+#define ENEMY_INIT_G 0.39
+#define ENEMY_INIT_B 0.015
 
 
 void getInitialPosition(const char *filename){
@@ -80,12 +93,12 @@ void getInitialPosition(const char *filename){
 
             if(strcmp(c1fill, "green") == 0){ //Se o prímeiro circulo for o jogador
                 //Cria o jogador e o inimigo
-                player = new Fighter(c1X, c1Y, c1R, angle1, 0.2, 0.64, 0);
-                enemy = new Fighter(c2X, c2Y, c2R, angle2, 0.86, 0.39, 0.015);
+                player = new Fighter(c1X, c1Y, c1R, angle1, PLAYER_INIT_R, PLAYER_INIT_G, PLAYER_INIT_B);
+                enemy = new Fighter(c2X, c2Y, c2R, angle2, ENEMY_INIT_R, ENEMY_INIT_G, ENEMY_INIT_B);
             } else { //Se o segundo círculo for o jogador
                 //Cria o jogador e o inimigo
-                enemy = new Fighter(c1X, c1Y, c1R, angle1, 0.86, 0.39, 0.015);
-                player = new Fighter(c2X, c2Y, c2R, angle2, 0.2, 0.64, 0);
+                enemy = new Fighter(c1X, c1Y, c1R, angle1, ENEMY_INIT_R, ENEMY_INIT_G, ENEMY_INIT_B);
+                player = new Fighter(c2X, c2Y, c2R, angle2, PLAYER_INIT_R, PLAYER_INIT_G, PLAYER_INIT_B);
             }
         } else {
             printf("ERRO na leitura do SVG!\n");
@@ -97,25 +110,6 @@ void getInitialPosition(const char *filename){
 		printf("Failed to load file \"%s\"\n", filename);
 	}
     
-}
-
-void renderScene(void)
-{
-    // Clear the screen.
-    glClear(GL_COLOR_BUFFER_BIT);
-
-    //Draw player
-    player->Desenha();
-    //Draw enemy
-    enemy->Desenha();
-
-    if(showColisionCircle){
-        player->DrawColisionCircle();
-        enemy->DrawColisionCircle();
-    }
-
-
-    glutSwapBuffers(); // Desenha the new frame of the game.
 }
 
 void keyPress(unsigned char key, int x, int y)
@@ -166,16 +160,24 @@ void mouseClick(int button, int state, int x, int y){
         }           
     } else {
         isDragging = 0;
+        playerIsPunchingForward = 0;
     }
 
     glutPostRedisplay();
 }
 
+GLfloat lastStatus = 0;
 void mouseMotion(int x, int y){
-    //Move with dragging with mouse
+    //Move punch when dragging with mouse
     if(isDragging){
         GLfloat distancePunch = x - initialX;
         GLfloat status = abs(distancePunch)/(ViewingWidth/3);
+        if(status > lastStatus){
+            playerIsPunchingForward = 1;
+        } else {
+            playerIsPunchingForward = 0;
+        }
+        lastStatus = status;
         if(distancePunch > 0){ //Right punch
             player->DefineRightPunchStatus(status);
         }
@@ -195,12 +197,64 @@ void ResetKeyStatus()
        keyStatus[i] = 0; 
 }
 
+void drawScores(){
+    glPushMatrix();
+    glColor3f (0, 0, 0);
+    glScalef(FONT_SIZE, FONT_SIZE, FONT_SIZE);
+    
+    //Draw player score
+    glPushMatrix();
+    glTranslatef(50, 300, 0);
+    char textScore[50];
+    sprintf(textScore, "Player: %d", playerScore);
+    int i=0;
+    for(i=0; textScore[i]!= '\0'; i++){
+        glutStrokeCharacter(GLUT_STROKE_ROMAN, textScore[i]);
+        glTranslatef(50, 0, 0);
+    }
+    glPopMatrix();
+
+    //Draw enemy score
+    glPushMatrix();
+    glTranslatef(50, 100, 0);
+    sprintf(textScore, "Enemy: %d", enemyScore);
+    i=0;
+    for(i=0; textScore[i]!= '\0'; i++){
+        glutStrokeCharacter(GLUT_STROKE_ROMAN, textScore[i]);
+        glTranslatef(50, 0, 0);
+    }
+    glPopMatrix();
+
+    glPopMatrix();
+}
+
+void renderScene(void)
+{
+    // Clear the screen.
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    //Draw player
+    player->Desenha();
+    //Draw enemy
+    enemy->Desenha();
+
+    if(showColisionCircle){
+        player->DrawColisionCircle();
+        enemy->DrawColisionCircle();
+    }
+
+    drawScores();
+
+
+    glutSwapBuffers(); // Desenha the new frame of the game.
+}
 
 void init(void)
 {
     ResetKeyStatus();
     // The color the windows will redraw. Its done to erase the previous frame.
-    glClearColor(0.78f, 0.78f, 0.78f, 1.0f); // Black, no opacity(alpha).
+    glClearColor(0.78f, 0.78f, 0.78f, 1.0f);
+    //glClearColor(0.0f, 0.0f, 0.0, 1.0f); // Black, no opacity(alpha).
  
     glMatrixMode(GL_PROJECTION); // Select the projection matrix 
     glOrtho(0,     // X coordinate of left edge            
@@ -246,7 +300,23 @@ void idle(void)
     if(!isDragging){
         player->RecolheSoco(timeDiference);
     }
-    
+
+    //Avalia colisão soco player
+    static int wasCollided = 0;
+    int isColliding = player->EstaAtingindoOponente(enemy);
+    if(playerIsPunchingForward){
+        if(isColliding && !wasCollided){ //Started collision
+            //HIT!
+            enemy->MudaCor(ENEMY_INIT_R*COLOR_HIT, ENEMY_INIT_G*COLOR_HIT, ENEMY_INIT_B*COLOR_HIT);
+            playerScore++;
+            printf("Player Score: %d\n", playerScore);
+        }
+    } 
+    if(!isColliding && wasCollided){
+        enemy->MudaCor(ENEMY_INIT_R, ENEMY_INIT_G, ENEMY_INIT_B);
+    }
+    wasCollided = isColliding;
+
     glutPostRedisplay();
 }
  

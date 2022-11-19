@@ -155,6 +155,49 @@ void Fighter::RecolheSoco(GLfloat timeDiference){
     }
 }
 
+int Fighter::EstaAtingindoOponente(Fighter *opponent){
+    //Find right hand position
+    mSetIdentity();
+    // Go to body center
+    mTranslate(gX, gY, 0);
+    mRotate(0,0,gAngleDirection-90);
+    mTranslate(gRadiusBody*DISTANCE_ARM, 0, 0); //Goes to base of arm
+    mRotate(0,0, getShoulderAngle(rightPunchStatus));
+    mTranslate(0, ARM_LENGTH*gRadiusBody*DISTANCE_ARM, 0); //Goes to the elbow
+    mRotate(0,0, getElbowAngle(rightPunchStatus));
+    mTranslate(0, ARM_LENGTH*gRadiusBody, 0); //Goes to the hand 
+    float X=0, Y=0, Z=0;
+    mApplyToPoint(&X, &Y, &Z);
+
+    //Verify if hand distance to opponents head is less than the sum of the radius
+    float distance = getDistancePoints(X, Y, opponent->ObtemX(), opponent->ObtemY());
+    if(distance <= (gRadiusBody*GLOVE_RADIUS + opponent->ObtemRaio())){
+        return 1;
+    }
+
+
+    //Find left hand position
+    mSetIdentity();
+    // Go to body center
+    mTranslate(gX, gY, 0);
+    mRotate(0,0,gAngleDirection-90);
+    mTranslate(-gRadiusBody*DISTANCE_ARM, 0, 0); //Goes to base of arm
+    mRotate(0,0, -getShoulderAngle(leftPunchStatus));
+    mTranslate(0, ARM_LENGTH*gRadiusBody*DISTANCE_ARM, 0); //Goes to the elbow
+    mRotate(0,0, -getElbowAngle(leftPunchStatus));
+    mTranslate(0, ARM_LENGTH*gRadiusBody, 0); //Goes to the hand 
+    X=0; Y=0; Z=0;
+    mApplyToPoint(&X, &Y, &Z);
+
+    //Verify if hand distance to opponents head is less than the sum of the radius
+    distance = getDistancePoints(X, Y, opponent->ObtemX(), opponent->ObtemY());
+    if(distance <= (gRadiusBody*GLOVE_RADIUS + opponent->ObtemRaio())){
+        return 1;
+    }
+
+    return 0;
+}
+
 
 
 void Fighter::DrawColisionCircle(){
