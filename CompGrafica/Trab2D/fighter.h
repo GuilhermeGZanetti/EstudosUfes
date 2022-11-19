@@ -10,7 +10,6 @@
 #define ARM_LENGTH 1.85 //Proportion from body radius
 #define ARM_WIDTH 0.3 //Proportion from body radius
 #define GLOVE_RADIUS 0.5 //Proportion from body radius
-
 #define SHOULDER_BASE_ANGLE -125
 #define ELBOW_BASE_ANGLE 130
 
@@ -21,6 +20,10 @@
 #define GLOVE_COLOR_R 0.73
 #define GLOVE_COLOR_G 0.0
 #define GLOVE_COLOR_B 0.0
+
+//Increments
+#define INC_ROTATE 0.2
+#define INC_MOVE 0.2
 
 
 
@@ -55,6 +58,8 @@ private:
 
     GLfloat getShoulderAngle(GLfloat punchStatus);
     GLfloat getElbowAngle(GLfloat punchStatus);
+    void RotateFighter(GLfloat rotationDegrees);
+    void MoveFighter(GLfloat increment);
 
 public:
     Fighter(GLfloat x, GLfloat y, GLfloat radius, GLfloat angle, GLfloat R, GLfloat G, GLfloat B){
@@ -71,6 +76,13 @@ public:
     void Desenha(){ 
         DrawFighter();
     };
+    void Gira(GLfloat timeDiference){ 
+        RotateFighter(timeDiference*INC_ROTATE);
+    };
+    void Move(GLfloat timeDiference){ 
+        MoveFighter(timeDiference*INC_MOVE);
+    };
+
     GLfloat ObtemX(){
         return gX;
     };

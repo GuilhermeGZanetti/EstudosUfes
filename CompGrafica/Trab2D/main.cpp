@@ -122,6 +122,14 @@ void keyPress(unsigned char key, int x, int y)
         case 'D':
              keyStatus[(int)('d')] = 1; //Using keyStatus trick
              break;
+        case 'w':
+        case 'W':
+             keyStatus[(int)('w')] = 1; //Using keyStatus trick
+             break;
+        case 's':
+        case 'S':
+             keyStatus[(int)('s')] = 1; //Using keyStatus trick
+             break;
         case ' ':
              //Soca
              break;
@@ -173,6 +181,24 @@ void idle(void)
     timeDiference = currentTime - previousTime;
     //Atualiza o tempo do ultimo frame ocorrido
     previousTime = currentTime;
+
+    //Treat keyPress
+    if(keyStatus[(int)('a')])
+    {
+        player->Gira(timeDiference);
+    }
+    if(keyStatus[(int)('d')])
+    {
+        player->Gira(-timeDiference);
+    }
+    if(keyStatus[(int)('w')])
+    {
+        player->Move(timeDiference);
+    }
+    if(keyStatus[(int)('s')])
+    {
+        player->Move(-timeDiference);
+    }
 
     
 

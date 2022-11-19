@@ -96,3 +96,22 @@ GLfloat Fighter::getElbowAngle(GLfloat punchStatus){
     //PunchStatus = 1 - Angle = 1/3 Base Angle
     return ((-2.0/3.0)*punchStatus + 1)*ELBOW_BASE_ANGLE;
 }
+
+void Fighter::RotateFighter(GLfloat rotationDegrees){
+    gAngleDirection += rotationDegrees;
+}
+
+void Fighter::MoveFighter(GLfloat increment){
+    mSetIdentity();
+
+    mTranslate(gX, gY, 0);
+    mRotate(0, 0, gAngleDirection-90);
+    mTranslate(0, increment, 0);
+
+    float X=0, Y=0, Z=0;
+    mApplyToPoint(&X, &Y, &Z);
+    //printf("Antes: gX: %f gY: %f Increment: %f\n", gX, gY, increment);
+    gX = X;
+    gY = Y;
+    //printf("Depois: gX: %f gY: %f\n", gX, gY);
+}
