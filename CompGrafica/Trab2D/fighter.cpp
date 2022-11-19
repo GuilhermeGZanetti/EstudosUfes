@@ -140,14 +140,21 @@ void Fighter::MoveFighter(GLfloat increment, GLfloat ViewingWidth, GLfloat Viewi
     if(Y + gRadiusBody >= ViewingHeight){ //Se passar da borda embaixo
         Y = ViewingHeight - gRadiusBody;
     }
-
     
-
-
     gX = X;
     gY = Y;
     //printf("Depois: gX: %f gY: %f\n", gX, gY);
 }
+
+void Fighter::RecolheSoco(GLfloat timeDiference){
+    if(rightPunchStatus > 0.0){
+        this->DefineRightPunchStatus(rightPunchStatus - timeDiference*INC_RETURN_PUNCH);
+    }
+    if(leftPunchStatus > 0.0){
+        this->DefineLeftPunchStatus(leftPunchStatus - timeDiference*INC_RETURN_PUNCH);
+    }
+}
+
 
 
 void Fighter::DrawColisionCircle(){

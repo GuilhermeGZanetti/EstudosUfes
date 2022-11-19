@@ -16,6 +16,10 @@
 int keyStatus[256];
 int showColisionCircle = 0;
 
+//Punch control
+int isDragging = 0;
+GLfloat initialX = 0;
+
 // Window dimensions
 GLint Width;
 GLint Height;
@@ -129,10 +133,12 @@ void keyPress(unsigned char key, int x, int y)
         case 'w':
         case 'W':
              keyStatus[(int)('w')] = 1; //Using keyStatus trick
+             isDragging = 0;
              break;
         case 's':
         case 'S':
              keyStatus[(int)('s')] = 1; //Using keyStatus trick
+             isDragging = 0;
              break;
         case 'c':
         case 'C':
@@ -151,6 +157,36 @@ void keyup(unsigned char key, int x, int y)
     glutPostRedisplay();
 }
 
+void mouseClick(int button, int state, int x, int y){
+    if(state==0 && button == 0){
+        //printf("SOCANDO! Mouse: X %d, Y %d, Button %d\n", x, y, button);
+        if(keyStatus[(int)('w')] != 1 && keyStatus[(int)('s')] != 1){//Is not walking
+            isDragging = 1;
+            initialX = x; 
+        }           
+    } else {
+        isDragging = 0;
+    }
+
+    glutPostRedisplay();
+}
+
+void mouseMotion(int x, int y){
+    //Move with dragging with mouse
+    if(isDragging){
+        GLfloat distancePunch = x - initialX;
+        GLfloat status = abs(distancePunch)/(ViewingWidth/3);
+        if(distancePunch > 0){ //Right punch
+            player->DefineRightPunchStatus(status);
+        }
+        if(distancePunch < 0){ //Left punch
+            player->DefineLeftPunchStatus(status);
+        }
+    }
+    glutPostRedisplay();
+}
+
+
 void ResetKeyStatus()
 {
     int i;
@@ -158,6 +194,7 @@ void ResetKeyStatus()
     for(i = 0; i < 256; i++)
        keyStatus[i] = 0; 
 }
+
 
 void init(void)
 {
@@ -206,8 +243,10 @@ void idle(void)
         player->Move(-timeDiference, ViewingWidth, ViewingHeight, enemy);
     }
 
+    if(!isDragging){
+        player->RecolheSoco(timeDiference);
+    }
     
-
     glutPostRedisplay();
 }
  
@@ -235,7 +274,9 @@ int main(int argc, char *argv[])
     glutKeyboardFunc(keyPress);
     glutIdleFunc(idle);
     glutKeyboardUpFunc(keyup);
-    
+    glutMouseFunc(mouseClick);
+    glutMotionFunc(mouseMotion);
+
     init();
  
     glutMainLoop();

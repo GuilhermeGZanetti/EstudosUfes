@@ -25,6 +25,7 @@
 //Increments
 #define INC_ROTATE 0.2
 #define INC_MOVE 0.2
+#define INC_RETURN_PUNCH 0.01
 
 
 
@@ -83,6 +84,7 @@ public:
     void Move(GLfloat timeDiference, GLfloat ViewingWidth, GLfloat ViewingHeight, Fighter* opponent){ 
         MoveFighter(timeDiference*INC_MOVE, ViewingWidth, ViewingHeight, opponent);
     };
+    void RecolheSoco(GLfloat timeDiference);
 
     void DrawColisionCircle();
 
@@ -94,6 +96,17 @@ public:
     };
     GLfloat ObtemRaio(){
         return gRadiusBody;
+    };
+
+    void DefineRightPunchStatus(GLfloat status){
+        if(status > 1) status = 1;
+        if(status < 0) status = 0;
+        rightPunchStatus = status;
+    };
+    void DefineLeftPunchStatus(GLfloat status){
+        if(status > 1) status = 1;
+        if(status < 0) status = 0;
+        leftPunchStatus = status;
     };
 };
 
