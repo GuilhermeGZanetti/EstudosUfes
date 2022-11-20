@@ -100,6 +100,11 @@ GLfloat Fighter::getElbowAngle(GLfloat punchStatus){
 
 void Fighter::RotateFighter(GLfloat rotationDegrees){
     gAngleDirection += rotationDegrees;
+    if(gAngleDirection > 360){
+        gAngleDirection -= 360;
+    } else if(gAngleDirection < 0){
+        gAngleDirection += 360;
+    }
 }
 
 void Fighter::MoveFighter(GLfloat increment, GLfloat ViewingWidth, GLfloat ViewingHeight, Fighter* opponent){
@@ -194,6 +199,31 @@ int Fighter::EstaAtingindoOponente(Fighter *opponent){
     if(distance <= (gRadiusBody*GLOVE_RADIUS + opponent->ObtemRaio())){
         return 1;
     }
+
+    return 0;
+}
+
+int Fighter::TurnTowards(GLfloat angleTarget, GLfloat timeDiference){
+    if(angleTarget > 360){
+        angleTarget -= 360;
+    } else if(angleTarget < 0){
+        angleTarget += 360;
+    }
+
+    GLfloat angleDiference = angleTarget - gAngleDirection;
+    
+    if(angleDiference > 180){
+        angleDiference = angleDiference - 360; //Get smaller angle between them
+    } else if(angleDiference < -180) {
+        angleDiference = 360 + angleDiference; //Get smaller angle between them
+    }
+    
+    if(angleDiference > -timeDiference*INC_ROTATE && angleDiference < timeDiference*INC_ROTATE){
+        this->RotateFighter(angleDiference);
+        return 1;
+    } 
+    if(angleDiference > 0) this->Gira(timeDiference);
+    else this->Gira(-timeDiference);
 
     return 0;
 }

@@ -5,6 +5,7 @@
 #include <math.h>
 #include <stdio.h>
 #include <string>
+#include <time.h>       /* time */
 #include "my_transforms.h"
 #include "auxFunctions.h"
 #include "tinyxml.h"
@@ -15,6 +16,7 @@
 //Key status
 int keyStatus[256];
 int showColisionCircle = 0;
+int enemyAIOn=1;
 
 //Punch control
 int isDragging = 0;
@@ -44,6 +46,57 @@ Fighter *enemy;
 #define ENEMY_INIT_R 0.86
 #define ENEMY_INIT_G 0.39
 #define ENEMY_INIT_B 0.015
+
+//Main functions
+void getInitialPosition(const char *filename);
+void ResetKeyStatus();
+void drawScores();
+void controlEnemy(GLfloat timeDiference);
+
+//Calbacks events
+void keyPress(unsigned char key, int x, int y);
+void keyup(unsigned char key, int x, int y);
+void mouseClick(int button, int state, int x, int y);
+void mouseMotion(int x, int y);
+void renderScene(void);
+void idle(void);
+
+//Init
+void init(void);
+ 
+int main(int argc, char *argv[])
+{
+    if(argc<2){
+        printf("ERRO: Forneça o arquivo SVG para configuração inicial\n");
+        return 1;
+    }
+    getInitialPosition(argv[1]);
+
+
+    // Initialize openGL with Double buffer and RGB color without transparency.
+    // Its interesting to try GLUT_SINGLE instead of GLUT_DOUBLE.
+    glutInit(&argc, argv);
+    glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB);
+ 
+    // Create the window.
+    glutInitWindowSize(Width, Height);
+    glutInitWindowPosition(150,50);
+    glutCreateWindow("Trab 2D");
+ 
+    // Define callbacks.
+    glutDisplayFunc(renderScene);
+    glutKeyboardFunc(keyPress);
+    glutIdleFunc(idle);
+    glutKeyboardUpFunc(keyup);
+    glutMouseFunc(mouseClick);
+    glutMotionFunc(mouseMotion);
+
+    init();
+ 
+    glutMainLoop();
+ 
+    return 0;
+}
 
 
 void getInitialPosition(const char *filename){
@@ -112,83 +165,6 @@ void getInitialPosition(const char *filename){
     
 }
 
-void keyPress(unsigned char key, int x, int y)
-{
-    switch (key)
-    {
-        case 'a':
-        case 'A':
-             keyStatus[(int)('a')] = 1; //Using keyStatus trick
-             break;
-        case 'd':
-        case 'D':
-             keyStatus[(int)('d')] = 1; //Using keyStatus trick
-             break;
-        case 'w':
-        case 'W':
-             keyStatus[(int)('w')] = 1; //Using keyStatus trick
-             isDragging = 0;
-             break;
-        case 's':
-        case 'S':
-             keyStatus[(int)('s')] = 1; //Using keyStatus trick
-             isDragging = 0;
-             break;
-        case 'c':
-        case 'C':
-             //Mostra círculo de colisão
-             showColisionCircle = !showColisionCircle;
-             break;
-        case 27 :
-             exit(0);
-    }
-    glutPostRedisplay();
-}
-
-void keyup(unsigned char key, int x, int y)
-{
-    keyStatus[(int)(key)] = 0;
-    glutPostRedisplay();
-}
-
-void mouseClick(int button, int state, int x, int y){
-    if(state==0 && button == 0){
-        //printf("SOCANDO! Mouse: X %d, Y %d, Button %d\n", x, y, button);
-        if(keyStatus[(int)('w')] != 1 && keyStatus[(int)('s')] != 1){//Is not walking
-            isDragging = 1;
-            initialX = x; 
-        }           
-    } else {
-        isDragging = 0;
-        playerIsPunchingForward = 0;
-    }
-
-    glutPostRedisplay();
-}
-
-GLfloat lastStatus = 0;
-void mouseMotion(int x, int y){
-    //Move punch when dragging with mouse
-    if(isDragging){
-        GLfloat distancePunch = x - initialX;
-        GLfloat status = abs(distancePunch)/(ViewingWidth/3);
-        if(status > lastStatus){
-            playerIsPunchingForward = 1;
-        } else {
-            playerIsPunchingForward = 0;
-        }
-        lastStatus = status;
-        if(distancePunch > 0){ //Right punch
-            player->DefineRightPunchStatus(status);
-        }
-        if(distancePunch < 0){ //Left punch
-            player->DefineLeftPunchStatus(status);
-        }
-    }
-    glutPostRedisplay();
-}
-
-
 void ResetKeyStatus()
 {
     int i;
@@ -199,6 +175,7 @@ void ResetKeyStatus()
 
 void drawScores(){
     glPushMatrix();
+    glPointSize(1);
     glColor3f (0, 0, 0);
     glScalef(FONT_SIZE, FONT_SIZE, FONT_SIZE);
     
@@ -228,6 +205,109 @@ void drawScores(){
     glPopMatrix();
 }
 
+void controlEnemy(GLfloat timeDiference){
+    static int enemyState=0; //0 walking towards player // 1 Punching Right // 2 Punching Left // 3 Walking away from player
+
+    switch (enemyState){
+        case 0:
+            static GLfloat changeRand = rand()%(30);
+            GLfloat dx = player->ObtemX() - enemy->ObtemX();
+            GLfloat dy = player->ObtemY() - enemy->ObtemY();
+            static GLfloat angleTarget = getAngleVector(dx, dy) + changeRand;
+            if(enemy->TurnTowards(angleTarget, timeDiference/2)){
+                if(changeRand > 0) changeRand = -(rand()%30);
+                else changeRand = (rand()%30);
+
+                dx = player->ObtemX() - enemy->ObtemX();
+                dy = player->ObtemY() - enemy->ObtemY();
+                angleTarget = getAngleVector(dx, dy) + changeRand;
+            }
+
+            //if(getDistancePoints(player->ObtemX(), player->ObtemY(), enemy->ObtemX(), enemy->ObtemY()))
+            break;
+
+    }
+}
+
+
+void keyPress(unsigned char key, int x, int y) {
+    switch (key)
+    {
+        case 'a':
+        case 'A':
+            keyStatus[(int)('a')] = 1; //Using keyStatus trick
+            break;
+        case 'd':
+        case 'D':
+            keyStatus[(int)('d')] = 1; //Using keyStatus trick
+            break;
+        case 'w':
+        case 'W':
+            keyStatus[(int)('w')] = 1; //Using keyStatus trick
+            isDragging = 0;
+            break;
+        case 's':
+        case 'S':
+            keyStatus[(int)('s')] = 1; //Using keyStatus trick
+            isDragging = 0;
+            break;
+        case 'c':
+        case 'C':
+            //Mostra círculo de colisão
+            showColisionCircle = !showColisionCircle;
+            break;
+        case 'v':
+        case 'V':
+            enemyAIOn = !enemyAIOn;
+            break;
+        case 27 :
+            exit(0);
+    }
+    glutPostRedisplay();
+}
+
+void keyup(unsigned char key, int x, int y) {
+    keyStatus[(int)(key)] = 0;
+    glutPostRedisplay();
+}
+
+void mouseClick(int button, int state, int x, int y){
+    if(state==0 && button == 0){
+        //printf("SOCANDO! Mouse: X %d, Y %d, Button %d\n", x, y, button);
+        if(keyStatus[(int)('w')] != 1 && keyStatus[(int)('s')] != 1){//Is not walking
+            isDragging = 1;
+            initialX = x; 
+        }           
+    } else {
+        isDragging = 0;
+        playerIsPunchingForward = 0;
+    }
+
+    glutPostRedisplay();
+}
+
+void mouseMotion(int x, int y){
+    static GLfloat lastStatus = 0;
+    //Move punch when dragging with mouse
+    if(isDragging){
+        GLfloat distancePunch = x - initialX;
+        GLfloat status = abs(distancePunch)/(ViewingWidth/3);
+        if(status > lastStatus){
+            playerIsPunchingForward = 1;
+        } else {
+            playerIsPunchingForward = 0;
+        }
+        lastStatus = status;
+        if(distancePunch > 0){ //Right punch
+            player->DefineRightPunchStatus(status);
+        }
+        if(distancePunch < 0){ //Left punch
+            player->DefineLeftPunchStatus(status);
+        }
+    }
+    glutPostRedisplay();
+}
+
 void renderScene(void)
 {
     // Clear the screen.
@@ -247,25 +327,6 @@ void renderScene(void)
 
 
     glutSwapBuffers(); // Desenha the new frame of the game.
-}
-
-void init(void)
-{
-    ResetKeyStatus();
-    // The color the windows will redraw. Its done to erase the previous frame.
-    glClearColor(0.78f, 0.78f, 0.78f, 1.0f);
-    //glClearColor(0.0f, 0.0f, 0.0, 1.0f); // Black, no opacity(alpha).
- 
-    glMatrixMode(GL_PROJECTION); // Select the projection matrix 
-    glOrtho(0,     // X coordinate of left edge            
-            (ViewingWidth),     // X coordinate of right edge           
-            0,     // Y coordinate of bottom edge      
-            (ViewingHeight),     // Y coordinate of top edge            
-            -100,     // Z coordinate of the “near” plane           
-            100);    // Z coordinate of the “far” plane
-    glMatrixMode(GL_MODELVIEW); // Select the projection matrix  
-    glLoadIdentity();
-      
 }
 
 void idle(void)
@@ -297,9 +358,13 @@ void idle(void)
         player->Move(-timeDiference, ViewingWidth, ViewingHeight, enemy);
     }
 
+    //Recolhe soco se não estiver apertando o mouse
     if(!isDragging){
         player->RecolheSoco(timeDiference);
     }
+
+    //Control the enemy (IA)
+    if(enemyAIOn) controlEnemy(timeDiference);
 
     //Avalia colisão soco player
     static int wasCollided = 0;
@@ -319,37 +384,26 @@ void idle(void)
 
     glutPostRedisplay();
 }
- 
-int main(int argc, char *argv[])
+
+
+void init(void)
 {
-    if(argc<2){
-        printf("ERRO: Forneça o arquivo SVG para configuração inicial\n");
-        return 1;
-    }
-    getInitialPosition(argv[1]);
+    /* initialize random seed: */
+    srand (time(NULL));
 
-
-    // Initialize openGL with Double buffer and RGB color without transparency.
-    // Its interesting to try GLUT_SINGLE instead of GLUT_DOUBLE.
-    glutInit(&argc, argv);
-    glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB);
+    ResetKeyStatus();
+    // The color the windows will redraw. Its done to erase the previous frame.
+    glClearColor(0.78f, 0.78f, 0.78f, 1.0f);
+    //glClearColor(0.0f, 0.0f, 0.0, 1.0f); // Black, no opacity(alpha).
  
-    // Create the window.
-    glutInitWindowSize(Width, Height);
-    glutInitWindowPosition(150,50);
-    glutCreateWindow("Trab 2D");
- 
-    // Define callbacks.
-    glutDisplayFunc(renderScene);
-    glutKeyboardFunc(keyPress);
-    glutIdleFunc(idle);
-    glutKeyboardUpFunc(keyup);
-    glutMouseFunc(mouseClick);
-    glutMotionFunc(mouseMotion);
-
-    init();
- 
-    glutMainLoop();
- 
-    return 0;
+    glMatrixMode(GL_PROJECTION); // Select the projection matrix 
+    glOrtho(0,     // X coordinate of left edge            
+            (ViewingWidth),     // X coordinate of right edge           
+            0,     // Y coordinate of bottom edge      
+            (ViewingHeight),     // Y coordinate of top edge            
+            -100,     // Z coordinate of the “near” plane           
+            100);    // Z coordinate of the “far” plane
+    glMatrixMode(GL_MODELVIEW); // Select the projection matrix  
+    glLoadIdentity();
+      
 }

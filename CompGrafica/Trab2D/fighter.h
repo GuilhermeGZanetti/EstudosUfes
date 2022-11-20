@@ -86,6 +86,7 @@ public:
     };
     void RecolheSoco(GLfloat timeDiference);
     int EstaAtingindoOponente(Fighter *opponent);
+    int TurnTowards(GLfloat angleTarget, GLfloat timeDiference);
 
     void DrawColisionCircle();
 
