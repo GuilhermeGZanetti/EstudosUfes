@@ -23,16 +23,16 @@ while True:
         print (f'Receive: {message}')
 
         #Decode
-        sequenceNumber = int.from_bytes(message[0:5], 'big')
+        sequenceNumber = int(message[0:5])
         requisitionType = message[5:6].decode()
-        timestamp = int.from_bytes(message[6:10], 'big')
-        message = message[10:].decode()
+        timestamp = int(message[6:10].decode())
+        messagem = message[10:].decode()
 
         #encode
-        message = bytearray(sequenceNumber.to_bytes(5, "big"))
-        message.extend(f"1".encode())
-        message.extend(timestamp.to_bytes(4, "big"))
-        message.extend("Mensagem - 30 bytes  Guilherme".encode())
+        message = bytearray(f'{sequenceNumber:05d}'.encode())
+        message.extend("1".encode())
+        message.extend(f"{timestamp:04d}".encode())
+        message.extend(messagem.encode())
 
         sleep_time = random.random()*1.5
         print("Sleep time: " + str(sleep_time))
