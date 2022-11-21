@@ -84,7 +84,8 @@ public:
     void Move(GLfloat timeDiference, GLfloat ViewingWidth, GLfloat ViewingHeight, Fighter* opponent){ 
         MoveFighter(timeDiference*INC_MOVE, ViewingWidth, ViewingHeight, opponent);
     };
-    void RecolheSoco(GLfloat timeDiference);
+    int RecolheSoco(GLfloat timeDiference);
+    int Soca(GLfloat timeDiference, int side);
     int EstaAtingindoOponente(Fighter *opponent);
     int TurnTowards(GLfloat angleTarget, GLfloat timeDiference);
 
@@ -98,6 +99,9 @@ public:
     };
     GLfloat ObtemRaio(){
         return gRadiusBody;
+    };
+    GLfloat ObtemDistMinimaOponente(Fighter *opponent){
+        return (opponent->ObtemRaio() + gRadiusBody*COLLISION_CIRCLE_RADIUS);
     };
 
     void MudaCor(GLfloat R, GLfloat G, GLfloat B){ gR = R; gG = G; gB=B; };

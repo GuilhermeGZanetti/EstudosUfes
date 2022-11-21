@@ -12,6 +12,8 @@
 #include "fighter.h"
 #define INC_KEY 1
 #define INC_KEYIDLE 0.2
+#define TIME_RUN_AWAY 2000
+
 
 //Key status
 int keyStatus[256];
@@ -22,6 +24,7 @@ int enemyAIOn=1;
 int isDragging = 0;
 GLfloat initialX = 0;
 int playerIsPunchingForward = 0;
+int enemyState=0; 
 
 // Window dimensions
 GLint Width;
@@ -206,29 +209,72 @@ void drawScores(){
 }
 
 void controlEnemy(GLfloat timeDiference){
-    static int enemyState=0; //0 walking towards player // 1 Punching Right // 2 Punching Left // 3 Walking away from player
+    //Enemy state //0 walking towards player // 1 Punching Right // 2 returning punch // 3 Punching Left // 4 returning punch //  5 Walking away from player
+    static GLdouble timeStart;
+    GLfloat dX, dY;
 
-    switch (enemyState){
-        case 0:
+    switch (enemyState){ 
+        case 0: //0 walking towards player
+        case 5: //5 Walking away from player
             static GLfloat changeRand = rand()%(30);
-            GLfloat dx = player->ObtemX() - enemy->ObtemX();
-            GLfloat dy = player->ObtemY() - enemy->ObtemY();
-            static GLfloat angleTarget = getAngleVector(dx, dy) + changeRand;
+            dX = player->ObtemX() - enemy->ObtemX();
+            dY = player->ObtemY() - enemy->ObtemY();
+            static GLfloat angleTarget = getAngleVector(dX, dY) + changeRand;
             if(enemy->TurnTowards(angleTarget, timeDiference/2)){
                 if(changeRand > 0) changeRand = -(rand()%30);
                 else changeRand = (rand()%30);
 
-                dx = player->ObtemX() - enemy->ObtemX();
-                dy = player->ObtemY() - enemy->ObtemY();
-                angleTarget = getAngleVector(dx, dy) + changeRand;
+                dX = player->ObtemX() - enemy->ObtemX();
+                dY = player->ObtemY() - enemy->ObtemY();
+                angleTarget = getAngleVector(dX, dY) + changeRand;
             }
 
-            //if(getDistancePoints(player->ObtemX(), player->ObtemY(), enemy->ObtemX(), enemy->ObtemY()))
-            break;
+            if(enemyState == 0){
+                //If distance to the player is less than a constant, stop walking towards him and starts punching
+                if(getDistancePoints(player->ObtemX(), player->ObtemY(), enemy->ObtemX(), enemy->ObtemY()) <= 1.1*enemy->ObtemDistMinimaOponente(player)){
+                    enemyState = 1;
+                } else { //Walks towards player
+                    enemy->Move(timeDiference, ViewingWidth, ViewingHeight, player);
+                }
+            } else { //state = 5
+                //If distance to the player is more than a constant, stop walking away from him and starts approaching
+                if(glutGet(GLUT_ELAPSED_TIME) - timeStart >= TIME_RUN_AWAY){
+                    enemyState = 0;
+                } else { //Walks away from player
+                    enemy->Move(-timeDiference, ViewingWidth, ViewingHeight, player);
+                }
+            }
 
+            break;
+        case 1: // 1 Punching Right
+            if(enemy->Soca(timeDiference, 0)){
+                //finished extending punch
+                enemyState = 2;
+            }
+            break;
+        case 2: // 2 returning Punching Right
+            if(enemy->RecolheSoco(timeDiference)){
+                //Finished retruning punch
+                enemyState = 3;
+            }
+            break;
+        case 3: // 1 Punching Left
+            if(enemy->Soca(timeDiference, 1)){
+                //finished extending punch
+                enemyState = 4;
+            }
+            break;
+        case 4: // 4 returning Punching Left
+            if(enemy->RecolheSoco(timeDiference)){
+                //Finished retruning punch
+                enemyState = 5;
+                timeStart = glutGet(GLUT_ELAPSED_TIME);
+            }
+            break;
+        default:
+            break;
     }
 }
-
 
 void keyPress(unsigned char key, int x, int y) {
     switch (key)
@@ -367,20 +413,37 @@ void idle(void)
     if(enemyAIOn) controlEnemy(timeDiference);
 
     //Avalia colisão soco player
-    static int wasCollided = 0;
+    static int playerHitting = 0;
     int isColliding = player->EstaAtingindoOponente(enemy);
     if(playerIsPunchingForward){
-        if(isColliding && !wasCollided){ //Started collision
+        if(isColliding && !playerHitting){ //Started collision
             //HIT!
             enemy->MudaCor(ENEMY_INIT_R*COLOR_HIT, ENEMY_INIT_G*COLOR_HIT, ENEMY_INIT_B*COLOR_HIT);
             playerScore++;
             printf("Player Score: %d\n", playerScore);
         }
     } 
-    if(!isColliding && wasCollided){
+    if(!isColliding && playerHitting){
         enemy->MudaCor(ENEMY_INIT_R, ENEMY_INIT_G, ENEMY_INIT_B);
     }
-    wasCollided = isColliding;
+    playerHitting = isColliding;
+
+    //Avalia colisão soco enemy
+    static int enemyHitting = 0;
+    isColliding = enemy->EstaAtingindoOponente(player);
+    if(enemyState == 1 || enemyState == 3){ //If it is on a punching state
+        if(isColliding && !enemyHitting){ //Started collision
+            //HIT!
+            player->MudaCor(PLAYER_INIT_R*COLOR_HIT, PLAYER_INIT_G*COLOR_HIT, PLAYER_INIT_B*COLOR_HIT);
+            enemyScore++;
+            printf("Enemy Score: %d\n", enemyScore);
+        }
+    } 
+    if(!isColliding && enemyHitting){
+        player->MudaCor(PLAYER_INIT_R, PLAYER_INIT_G, PLAYER_INIT_B);
+    }
+    enemyHitting = isColliding;    
+
 
     glutPostRedisplay();
 }

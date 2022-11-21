@@ -151,12 +151,32 @@ void Fighter::MoveFighter(GLfloat increment, GLfloat ViewingWidth, GLfloat Viewi
     //printf("Depois: gX: %f gY: %f\n", gX, gY);
 }
 
-void Fighter::RecolheSoco(GLfloat timeDiference){
+int Fighter::RecolheSoco(GLfloat timeDiference){
     if(rightPunchStatus > 0.0){
         this->DefineRightPunchStatus(rightPunchStatus - timeDiference*INC_RETURN_PUNCH);
     }
     if(leftPunchStatus > 0.0){
         this->DefineLeftPunchStatus(leftPunchStatus - timeDiference*INC_RETURN_PUNCH);
+    }
+    if(rightPunchStatus == 0 && leftPunchStatus == 0){
+        return 1; //finished
+    }
+    return 0; //not finished
+}
+
+int Fighter::Soca(GLfloat timeDiference, int side){
+    if(side == 0){ //Right
+        this->DefineRightPunchStatus(rightPunchStatus + timeDiference*INC_RETURN_PUNCH);
+        if(rightPunchStatus == 1){
+            return 1;
+        }
+        return 0;
+    } else { //left
+        this->DefineLeftPunchStatus(leftPunchStatus + timeDiference*INC_RETURN_PUNCH);
+        if(leftPunchStatus == 1){
+            return 1;
+        }
+        return 0;
     }
 }
 
