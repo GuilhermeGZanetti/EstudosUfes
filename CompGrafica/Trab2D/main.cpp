@@ -19,6 +19,8 @@
 int keyStatus[256];
 int showColisionCircle = 0;
 int enemyAIOn=1;
+int gameCanEnd=1;
+int gameOver = 1;
 
 //Punch control
 int isDragging = 0;
@@ -34,7 +36,7 @@ GLint ViewingWidth;
 GLint ViewingHeight;
 
 //Score
-int playerScore = 0;
+int playerScore = 10;
 int enemyScore = 0;
 #define FONT_SIZE 0.1
 
@@ -55,6 +57,8 @@ void getInitialPosition(const char *filename);
 void ResetKeyStatus();
 void drawScores();
 void controlEnemy(GLfloat timeDiference);
+void endGame();
+void drawEndTitle();
 
 //Calbacks events
 void keyPress(unsigned char key, int x, int y);
@@ -168,8 +172,7 @@ void getInitialPosition(const char *filename){
     
 }
 
-void ResetKeyStatus()
-{
+void ResetKeyStatus() {
     int i;
     //Initialize keyStatus
     for(i = 0; i < 256; i++)
@@ -276,6 +279,71 @@ void controlEnemy(GLfloat timeDiference){
     }
 }
 
+void endGame(){
+    if(gameCanEnd){
+        gameOver = 1;
+    }
+}
+
+void drawEndTitle(){
+    glPushMatrix();
+
+    glPointSize(1);
+    glColor3f (0, 0, 0);
+    glScalef(FONT_SIZE*5, FONT_SIZE*5, FONT_SIZE*5);
+    
+    //Draw player score
+    glPushMatrix();
+    glTranslatef(50, 300, 0);
+    char textScore[50];
+    sprintf(textScore, "Player: %d", playerScore);
+    int i=0;
+    for(i=0; textScore[i]!= '\0'; i++){
+        glutStrokeCharacter(GLUT_STROKE_ROMAN, textScore[i]);
+        glTranslatef(50, 0, 0);
+    }
+    glPopMatrix();
+
+    //Draw enemy score
+    glPushMatrix();
+    glTranslatef(50, 100, 0);
+    sprintf(textScore, "Enemy: %d", enemyScore);
+    i=0;
+    for(i=0; textScore[i]!= '\0'; i++){
+        glutStrokeCharacter(GLUT_STROKE_ROMAN, textScore[i]);
+        glTranslatef(50, 0, 0);
+    }
+    glPopMatrix();
+
+    //Say who won
+    glPushMatrix();
+    glTranslatef(50, 900, 0);
+    if(playerScore>=10){
+        sprintf(textScore, "You won!");
+    } else {
+        sprintf(textScore, "AI won!");
+    }
+    i=0;
+    for(i=0; textScore[i]!= '\0'; i++){
+        glutStrokeCharacter(GLUT_STROKE_ROMAN, textScore[i]);
+        glTranslatef(50, 0, 0);
+    }
+    glPopMatrix();
+
+    //Say game over
+    glPushMatrix();
+    glTranslatef(50, 1400, 0);
+    sprintf(textScore, "Game Over!");
+    i=0;
+    for(i=0; textScore[i]!= '\0'; i++){
+        glutStrokeCharacter(GLUT_STROKE_ROMAN, textScore[i]);
+        glTranslatef(50, 0, 0);
+    }
+    glPopMatrix();
+
+    glPopMatrix();
+}
+
 void keyPress(unsigned char key, int x, int y) {
     switch (key)
     {
@@ -305,6 +373,10 @@ void keyPress(unsigned char key, int x, int y) {
         case 'v':
         case 'V':
             enemyAIOn = !enemyAIOn;
+            break;
+        case 'b':
+        case 'B':
+            gameCanEnd = !gameCanEnd;
             break;
         case 27 :
             exit(0);
@@ -346,37 +418,45 @@ void mouseMotion(int x, int y){
         lastStatus = status;
         if(distancePunch > 0){ //Right punch
             player->DefineRightPunchStatus(status);
+            player->DefineLeftPunchStatus(0);
         }
         if(distancePunch < 0){ //Left punch
             player->DefineLeftPunchStatus(status);
+            player->DefineRightPunchStatus(0);
         }
     }
     glutPostRedisplay();
 }
 
-void renderScene(void)
-{
+void renderScene(void){
     // Clear the screen.
     glClear(GL_COLOR_BUFFER_BIT);
 
-    //Draw player
-    player->Desenha();
-    //Draw enemy
-    enemy->Desenha();
+    if(!gameOver){
+        //Draw player
+        player->Desenha();
+        //Draw enemy
+        enemy->Desenha();
 
-    if(showColisionCircle){
-        player->DrawColisionCircle();
-        enemy->DrawColisionCircle();
+        if(showColisionCircle){
+            player->DrawColisionCircle();
+            enemy->DrawColisionCircle();
+        }
+
+        drawScores();
+    } else { //If game has ended
+        drawEndTitle();
     }
-
-    drawScores();
 
 
     glutSwapBuffers(); // Desenha the new frame of the game.
 }
 
-void idle(void)
-{
+void idle(void){
+    if(gameOver){ //If the game has ended ignore everything
+        glutPostRedisplay();
+        return;
+    }
     static GLdouble previousTime = glutGet(GLUT_ELAPSED_TIME);
     GLdouble currentTime, timeDiference;
     //Pega o tempo que passou do inicio da aplicacao
@@ -421,6 +501,9 @@ void idle(void)
             enemy->MudaCor(ENEMY_INIT_R*COLOR_HIT, ENEMY_INIT_G*COLOR_HIT, ENEMY_INIT_B*COLOR_HIT);
             playerScore++;
             printf("Player Score: %d\n", playerScore);
+            if(playerScore>=10){//Won!
+                endGame();
+            }
         }
     } 
     if(!isColliding && playerHitting){
@@ -437,6 +520,9 @@ void idle(void)
             player->MudaCor(PLAYER_INIT_R*COLOR_HIT, PLAYER_INIT_G*COLOR_HIT, PLAYER_INIT_B*COLOR_HIT);
             enemyScore++;
             printf("Enemy Score: %d\n", enemyScore);
+            if(enemyScore>=10){//Won!
+                endGame();
+            }
         }
     } 
     if(!isColliding && enemyHitting){
