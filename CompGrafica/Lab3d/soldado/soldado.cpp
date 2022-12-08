@@ -83,13 +83,24 @@ void ChangeCoordSys(
         GLdouble bx, GLdouble by, GLdouble bz, 
         GLdouble upx, GLdouble upy, GLdouble upz)
 {
-    float x[3], y[3], z[3];
-    GLfloat m[4][4] = { 1,0,0,0,
-                        0,1,0,0,
-                        0,0,1,0,
-                        0,0,0,1};
+    float x[3], y[3], z[3], up[3] = {(float)upx, (float)upy, (float)upz};
+    
+	//Encontrar Y'
+    y[0]=ax-bx;
+    y[1]=ay-by;
+    y[2]=az-bz;
+    normalize(y);
 
-	//COLOQUE SEU CODIGO AQUI
+    //Encontrar X'
+    cross(y, up, x);
+    normalize(x);
+
+    //Encontrar Z'
+    cross(x, y, z);
+    normalize(z);
+
+    GLfloat m[4][4] = {x[0], x[1], x[2], 0.0, y[0], y[1], y[2], 0.0, z[0], z[1], z[2], 0.0, (float)bx, (float)by, (float)bz, 1.0};
+
     
     glMultMatrixf(&m[0][0]);
 }
@@ -138,9 +149,9 @@ void DrawAxes(double size)
 
 //ALTERE AQUI - SEU CODIGO AQUI
 //Usar meshlab para obter os pontos abaixo
-int pontoArmaAponta = 0;
-int pontoPosicaoArma = 0;
-int up[3] = {0, 0, 0};
+int pontoArmaAponta = 4414;
+int pontoPosicaoArma = 2337;
+int up[3] = {0, 1, 0};
 void desenhaJogador(){
     glMatrixMode(GL_MODELVIEW);
     glPushMatrix();
@@ -183,15 +194,29 @@ void MygluLookAt(
         GLdouble centerx, GLdouble centery, GLdouble centerz, 
         GLdouble upx, GLdouble upy, GLdouble upz)
 {
-    float forward[3], side[3], up[3];
+    float forward[3] = {(float)(centerx-eyex), (float)(centery-eyey), (float)(centerz-eyez)}; 
+    float up[3] = {(float)upx, (float)upy, (float)upz};
+
+    float w[3], u[3], v[3];
+    //Encontrando w
+    w[0] = -forward[0];
+    w[1] = -forward[1];
+    w[2] = -forward[2];
+    normalize(w);
+
+    //Encontrando u
+    cross(up, w, u);
+    normalize(u);
+
+    //Encontrando v
+    cross(w, u, v);
+    normalize(v);
+
     //column-major order
-    GLfloat m[4][4] = { 1,0,0,0,
-                        0,1,0,0,
-                        0,0,1,0,
-                        0,0,0,1};
-
-	//COLOQUE SEU CODIGO AQUI
-
+    GLfloat m[4][4] = { u[0],v[0],w[0],0, u[1],v[1],w[1],0, u[2],v[2],w[2],0, 0,0,0,1};
+	
+    glMultMatrixf(&m[0][0]);
+    glTranslatef(-(float)eyex,-(float)eyey,-(float)eyez);
 }
 
 void display(void)
@@ -211,7 +236,7 @@ void display(void)
                     0, 0, 0,
                     0, 1, 0);
     } else{
-        //Limpa a cor com azulado
+        //Limpa a cor com avermelhado
         glClearColor (1.0, 0.30, 0.30, 0.0);
         glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);        
         MygluLookAt(  zoom*sin(camXZAngle*M_PI/180)*cos((camXYAngle*M_PI/180)),
