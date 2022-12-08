@@ -8,7 +8,7 @@ num_pings = 10
 wait_time = 1 #seconds
 
 # Create a UDP socket. UDP is datagram based.
-destination = ("127.0.0.1", 30000)
+destination = ("168.227.188.22", 30000)
 udpClientSocket = socket(AF_INET, SOCK_DGRAM)
 #Define the max time between pings (wait time)
 udpClientSocket.setblocking(False)

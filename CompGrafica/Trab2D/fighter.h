@@ -23,9 +23,12 @@
 #define GLOVE_COLOR_B 0.0
 
 //Increments
-#define INC_ROTATE 0.2
-#define INC_MOVE 0.2
-#define INC_RETURN_PUNCH 0.01
+#define INC_ROTATE 0.15
+#define INC_MOVE 0.15
+#define INC_RETURN_PUNCH 0.005
+
+//Macros
+#define BIGGER(X, Y) X>Y?X:Y
 
 
 

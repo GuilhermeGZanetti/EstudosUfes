@@ -119,7 +119,8 @@ void Fighter::MoveFighter(GLfloat increment, GLfloat ViewingWidth, GLfloat Viewi
     //printf("Antes: gX: %f gY: %f Increment: %f\n", gX, gY, increment);
 
     //Check collision with opponent
-    float minDist = (opponent->ObtemRaio() + gRadiusBody*COLLISION_CIRCLE_RADIUS);
+    float minDist = BIGGER((opponent->ObtemRaio() + gRadiusBody*COLLISION_CIRCLE_RADIUS), 
+                            (gRadiusBody + opponent->ObtemRaio()*COLLISION_CIRCLE_RADIUS));
     if(getDistancePoints(X, Y, opponent->ObtemX(), opponent->ObtemY()) < minDist){
         //Get unitary vector pointing from opponent to my new (wrong) position
         float dx = X - opponent->ObtemX();

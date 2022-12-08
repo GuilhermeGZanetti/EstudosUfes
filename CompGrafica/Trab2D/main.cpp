@@ -20,7 +20,7 @@ int keyStatus[256];
 int showColisionCircle = 0;
 int enemyAIOn=1;
 int gameCanEnd=1;
-int gameOver = 1;
+int gameOver = 0;
 
 //Punch control
 int isDragging = 0;
@@ -36,9 +36,11 @@ GLint ViewingWidth;
 GLint ViewingHeight;
 
 //Score
-int playerScore = 10;
+int playerScore = 0;
 int enemyScore = 0;
-#define FONT_SIZE 0.1
+GLfloat fontSize = 0;
+#define FONT_SIZE 0.0002
+#define GAME_OVER_FONT_SIZE 2
 
 
 //Componentes do mundo virtual sendo modelado
@@ -55,9 +57,9 @@ Fighter *enemy;
 //Main functions
 void getInitialPosition(const char *filename);
 void ResetKeyStatus();
-void drawScores();
 void controlEnemy(GLfloat timeDiference);
 void endGame();
+void drawScores();
 void drawEndTitle();
 
 //Calbacks events
@@ -179,38 +181,6 @@ void ResetKeyStatus() {
        keyStatus[i] = 0; 
 }
 
-void drawScores(){
-    glPushMatrix();
-    glPointSize(1);
-    glColor3f (0, 0, 0);
-    glScalef(FONT_SIZE, FONT_SIZE, FONT_SIZE);
-    
-    //Draw player score
-    glPushMatrix();
-    glTranslatef(50, 300, 0);
-    char textScore[50];
-    sprintf(textScore, "Player: %d", playerScore);
-    int i=0;
-    for(i=0; textScore[i]!= '\0'; i++){
-        glutStrokeCharacter(GLUT_STROKE_ROMAN, textScore[i]);
-        glTranslatef(50, 0, 0);
-    }
-    glPopMatrix();
-
-    //Draw enemy score
-    glPushMatrix();
-    glTranslatef(50, 100, 0);
-    sprintf(textScore, "Enemy: %d", enemyScore);
-    i=0;
-    for(i=0; textScore[i]!= '\0'; i++){
-        glutStrokeCharacter(GLUT_STROKE_ROMAN, textScore[i]);
-        glTranslatef(50, 0, 0);
-    }
-    glPopMatrix();
-
-    glPopMatrix();
-}
-
 void controlEnemy(GLfloat timeDiference){
     //Enemy state //0 walking towards player // 1 Punching Right // 2 returning punch // 3 Punching Left // 4 returning punch //  5 Walking away from player
     static GLdouble timeStart;
@@ -285,12 +255,12 @@ void endGame(){
     }
 }
 
-void drawEndTitle(){
-    glPushMatrix();
 
+void drawScores(){
+    glPushMatrix();
     glPointSize(1);
     glColor3f (0, 0, 0);
-    glScalef(FONT_SIZE*5, FONT_SIZE*5, FONT_SIZE*5);
+    glScalef(fontSize, fontSize, fontSize);
     
     //Draw player score
     glPushMatrix();
@@ -315,9 +285,44 @@ void drawEndTitle(){
     }
     glPopMatrix();
 
+    glPopMatrix();
+}
+
+void drawEndTitle(){
+    glPushMatrix();
+
+    glPointSize(1);
+    glColor3f (0, 0, 0);
+    
+    //Draw player score
+    glPushMatrix();
+    glTranslatef(ViewingWidth*0.05, ViewingHeight*0.10, 0);
+    glScalef(fontSize*GAME_OVER_FONT_SIZE, fontSize*GAME_OVER_FONT_SIZE, fontSize*GAME_OVER_FONT_SIZE);
+    char textScore[50];
+    sprintf(textScore, "Player: %d", playerScore);
+    int i=0;
+    for(i=0; textScore[i]!= '\0'; i++){
+        glutStrokeCharacter(GLUT_STROKE_ROMAN, textScore[i]);
+        glTranslatef(50, 0, 0);
+    }
+    glPopMatrix();
+
+    //Draw enemy score
+    glPushMatrix();
+    glTranslatef(ViewingWidth*0.05, ViewingHeight*0.20, 0);
+    glScalef(fontSize*GAME_OVER_FONT_SIZE, fontSize*GAME_OVER_FONT_SIZE, fontSize*GAME_OVER_FONT_SIZE);
+    sprintf(textScore, "Enemy: %d", enemyScore);
+    i=0;
+    for(i=0; textScore[i]!= '\0'; i++){
+        glutStrokeCharacter(GLUT_STROKE_ROMAN, textScore[i]);
+        glTranslatef(50, 0, 0);
+    }
+    glPopMatrix();
+
     //Say who won
     glPushMatrix();
-    glTranslatef(50, 900, 0);
+    glTranslatef(ViewingWidth*0.05, ViewingHeight*0.5, 0);
+    glScalef(fontSize*GAME_OVER_FONT_SIZE, fontSize*GAME_OVER_FONT_SIZE, fontSize*GAME_OVER_FONT_SIZE);
     if(playerScore>=10){
         sprintf(textScore, "You won!");
     } else {
@@ -332,7 +337,8 @@ void drawEndTitle(){
 
     //Say game over
     glPushMatrix();
-    glTranslatef(50, 1400, 0);
+    glTranslatef(ViewingWidth*0.05, ViewingHeight*0.85, 0);
+    glScalef(fontSize*GAME_OVER_FONT_SIZE, fontSize*GAME_OVER_FONT_SIZE, fontSize*GAME_OVER_FONT_SIZE);
     sprintf(textScore, "Game Over!");
     i=0;
     for(i=0; textScore[i]!= '\0'; i++){
@@ -394,8 +400,8 @@ void mouseClick(int button, int state, int x, int y){
         //printf("SOCANDO! Mouse: X %d, Y %d, Button %d\n", x, y, button);
         if(keyStatus[(int)('w')] != 1 && keyStatus[(int)('s')] != 1){//Is not walking
             isDragging = 1;
-            initialX = x; 
-        }           
+            initialX = x;  
+        }     
     } else {
         isDragging = 0;
         playerIsPunchingForward = 0;
@@ -416,6 +422,7 @@ void mouseMotion(int x, int y){
             playerIsPunchingForward = 0;
         }
         lastStatus = status;
+    
         if(distancePunch > 0){ //Right punch
             player->DefineRightPunchStatus(status);
             player->DefineLeftPunchStatus(0);
@@ -504,12 +511,14 @@ void idle(void){
             if(playerScore>=10){//Won!
                 endGame();
             }
+            playerHitting = 1;
         }
     } 
     if(!isColliding && playerHitting){
         enemy->MudaCor(ENEMY_INIT_R, ENEMY_INIT_G, ENEMY_INIT_B);
+        playerHitting = 0;
     }
-    playerHitting = isColliding;
+    
 
     //Avalia colisão soco enemy
     static int enemyHitting = 0;
@@ -539,6 +548,9 @@ void init(void)
 {
     /* initialize random seed: */
     srand (time(NULL));
+
+    //Set font size:
+    fontSize = (FONT_SIZE*ViewingWidth < FONT_SIZE*ViewingHeight) ? FONT_SIZE*ViewingWidth : FONT_SIZE*ViewingHeight;
 
     ResetKeyStatus();
     // The color the windows will redraw. Its done to erase the previous frame.
