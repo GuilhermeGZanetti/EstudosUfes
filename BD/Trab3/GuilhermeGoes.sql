@@ -8067,5 +8067,5 @@ INSERT INTO "Schedule" ("time", "#t", "op", "attr") VALUES
 (7999, 3, 'W', 'Y'),
 (8001, 3, 'C', '-');
 
--- calling function - Expected result 1
+-- calling function - Expected result 0
 SELECT "testeScheduleSerial"() AS resp;
